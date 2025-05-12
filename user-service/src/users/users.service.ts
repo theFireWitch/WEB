@@ -1,3 +1,5 @@
+import { config } from 'dotenv';
+config(); 
 import { Injectable,  UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -26,35 +28,20 @@ export class UsersService {
     return result;
   }
 
-  // async validateUser(email: string, password: string): Promise<any> {
-  //   const user = await this.userRepository.findOneBy({ email });
+async validateUser(email: string, password: string): Promise<User | null> {
+    const user = await this.userRepository.findOneBy({ email });
 
-  //   if (!user) {
-  //     throw new Error('User not found');
-  //   }
+    if (!user) {
+      return null;
+    }
 
-  //   const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-  //   if (!isPasswordValid) {
-  //     throw new Error('Invalid credentials');
-  //   }
+    if (!isPasswordValid) {
+      return null; 
+    }
 
-  //   const { password: _, ...result } = user;
-  //   console.log('JWT_SECRET:', process.env.JWT_SECRET); 
-    
-  //   const accessToken = this.jwtService.sign(result);
-  //   return { access_token: accessToken };
-  // }
-  async validateUser(email: string, password: string): Promise<any> {
-  const user = await this.userRepository.findOneBy({ email });
-
-  if (user && (await bcrypt.compare(password, user.password))) {
-    const { password, ...result } = user;
-    return {
-      access_token: this.jwtService.sign(result),
-    };
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword as User;
   }
-
-  return null; // ⚠️ Якщо сюди потрапляємо, Nest.js може кинути помилку, якщо не оброблено
-}
 }
